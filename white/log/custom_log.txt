@@ -1,0 +1,31 @@
+[Epoch 1] Loss: 44.4927 | Train Accuracy: 99.06%
+Validation Accuracy: 99.35%
+
+[Epoch 2] Loss: 20.3191 | Train Accuracy: 99.52%
+Validation Accuracy: 99.50%
+
+[Epoch 3] Loss: 17.4485 | Train Accuracy: 99.58%
+Validation Accuracy: 99.47%
+
+[Epoch 4] Loss: 16.6558 | Train Accuracy: 99.61%
+Validation Accuracy: 99.53%
+
+[Epoch 5] Loss: 15.9547 | Train Accuracy: 99.63%
+Validation Accuracy: 99.58%
+
+[Epoch 6] Loss: 14.6264 | Train Accuracy: 99.63%
+Validation Accuracy: 99.59%
+
+[Epoch 7] Loss: 14.6851 | Train Accuracy: 99.65%
+Validation Accuracy: 99.57%
+
+[Epoch 8] Loss: 13.5363 | Train Accuracy: 99.66%
+Validation Accuracy: 99.58%
+
+[Epoch 9] Loss: 14.2738 | Train Accuracy: 99.65%
+Validation Accuracy: 99.57%
+
+[Epoch 10] Loss: 12.2637 | Train Accuracy: 99.68%
+Validation Accuracy: 99.58%
+
+saved model custom.pth

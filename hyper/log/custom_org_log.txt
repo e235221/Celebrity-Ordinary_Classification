@@ -1,0 +1,32 @@
+[Epoch 1] Loss: 26.7602 | Train Accuracy: 99.51%
+Validation Accuracy: 99.97%
+
+[Epoch 2] Loss: 0.9751 | Train Accuracy: 99.99%
+Validation Accuracy: 100.00%
+
+[Epoch 3] Loss: 1.9069 | Train Accuracy: 99.98%
+Validation Accuracy: 100.00%
+
+[Epoch 4] Loss: 0.0586 | Train Accuracy: 100.00%
+Validation Accuracy: 100.00%
+
+[Epoch 5] Loss: 1.5159 | Train Accuracy: 99.98%
+Validation Accuracy: 100.00%
+
+[Epoch 6] Loss: 1.2183 | Train Accuracy: 99.98%
+Validation Accuracy: 100.00%
+
+[Epoch 7] Loss: 0.0472 | Train Accuracy: 100.00%
+Validation Accuracy: 100.00%
+
+[Epoch 8] Loss: 0.0411 | Train Accuracy: 100.00%
+Validation Accuracy: 100.00%
+
+[Epoch 9] Loss: 1.3280 | Train Accuracy: 99.99%
+Validation Accuracy: 100.00%
+
+[Epoch 10] Loss: 0.0141 | Train Accuracy: 100.00%
+Validation Accuracy: 100.00%
+
+saved model custom_org.pth
+Total Training Time: 32.34 minutes

@@ -1,0 +1,31 @@
+[Epoch 1] Loss: 226.8957 | Train Accuracy: 95.42%
+Validation Accuracy: 98.99%
+
+[Epoch 2] Loss: 52.3064 | Train Accuracy: 98.98%
+Validation Accuracy: 99.13%
+
+[Epoch 3] Loss: 33.7952 | Train Accuracy: 99.33%
+Validation Accuracy: 99.34%
+
+[Epoch 4] Loss: 26.0208 | Train Accuracy: 99.44%
+Validation Accuracy: 99.45%
+
+[Epoch 5] Loss: 21.9519 | Train Accuracy: 99.55%
+Validation Accuracy: 99.45%
+
+[Epoch 6] Loss: 21.3502 | Train Accuracy: 99.52%
+Validation Accuracy: 99.47%
+
+[Epoch 7] Loss: 18.4042 | Train Accuracy: 99.57%
+Validation Accuracy: 99.21%
+
+[Epoch 8] Loss: 19.4768 | Train Accuracy: 99.54%
+Validation Accuracy: 99.52%
+
+[Epoch 9] Loss: 16.3755 | Train Accuracy: 99.59%
+Validation Accuracy: 99.52%
+
+[Epoch 10] Loss: 17.2808 | Train Accuracy: 99.57%
+Validation Accuracy: 99.54%
+
+saved model efficientnetb0_looks_classifier.pth

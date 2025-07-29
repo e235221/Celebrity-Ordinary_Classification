@@ -1,0 +1,31 @@
+[Epoch 1] Loss: 117.7208 | Train Accuracy: 97.74%
+Validation Accuracy: 99.08%
+
+[Epoch 2] Loss: 40.5083 | Train Accuracy: 99.27%
+Validation Accuracy: 99.34%
+
+[Epoch 3] Loss: 31.8555 | Train Accuracy: 99.40%
+Validation Accuracy: 99.27%
+
+[Epoch 4] Loss: 25.8366 | Train Accuracy: 99.55%
+Validation Accuracy: 99.50%
+
+[Epoch 5] Loss: 22.5626 | Train Accuracy: 99.59%
+Validation Accuracy: 99.40%
+
+[Epoch 6] Loss: 19.2789 | Train Accuracy: 99.65%
+Validation Accuracy: 99.27%
+
+[Epoch 7] Loss: 15.1360 | Train Accuracy: 99.72%
+Validation Accuracy: 99.31%
+
+[Epoch 8] Loss: 12.9702 | Train Accuracy: 99.80%
+Validation Accuracy: 99.49%
+
+[Epoch 9] Loss: 11.6820 | Train Accuracy: 99.79%
+Validation Accuracy: 99.56%
+
+[Epoch 10] Loss: 8.6048 | Train Accuracy: 99.84%
+Validation Accuracy: 99.47%
+
+saved model: resnet34_looks_classifier.pth

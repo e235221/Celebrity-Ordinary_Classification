@@ -1,0 +1,3 @@
+# 大容量モデルファイルを除外
+model/res34_fair_align_multi_7_20190809.pt
+model/res34_fair_align_multi_4_20190809.pt
