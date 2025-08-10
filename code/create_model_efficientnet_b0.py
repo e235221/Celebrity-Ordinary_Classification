@@ -8,12 +8,8 @@ from torchvision import transforms
 from torchvision.models import efficientnet_b0
 from torchvision.models import EfficientNet_B0_Weights
 import sys
-
-# log path
-log_file = '/home/student/e21/e215706/dm/sorce/log/create_efficientnetb0_log.txt'
-os.makedirs(os.path.dirname(log_file), exist_ok=True)
-sys.stdout = open(log_file, 'w')
-
+from pathlib import Path
+from config_utils import load_cfg, ensure_dir
 
 # =======================
 # 1. Dataset定義
@@ -49,13 +45,23 @@ transform = transforms.Compose([
 # =======================
 # 3. Hyperparameter & csv, model path
 # =======================
-train_csv = '/home/student/e21/e215706/dm/sorce/image/csv/all_train.csv'
-test_csv = '/home/student/e21/e215706/dm/sorce/image/csv/all_test.csv'
-image_root = '/home/student/e21/e215706/dm/sorce/image/all_image'
+root, cfg = load_cfg()
+paths, tr = cfg["paths"], cfg["train"]
 
-batch_size = 32
-num_epochs = 10
-learning_rate = 1e-4
+log_file = (root / paths["logs_dir"] / "efficientnetb0_log.txt")
+ensure_dir(log_file.parent)
+
+sys.stdout = open(log_file, "w", buffering=1, encoding="utf-8")
+
+train_csv  = root / paths["train_csv"]
+test_csv   = root / paths["test_csv"]
+image_root = root / paths["image_root"]
+
+
+BATCH_SIZE  = tr["batch_size"]
+NUM_EPOCHS  = tr["num_epochs"]
+LR          = tr["learning_rate"]
+NUM_WORKERS = tr["num_workers"]
 
 # =======================
 # 4. DataLoader
@@ -63,8 +69,8 @@ learning_rate = 1e-4
 train_dataset = LooksDataset(train_csv, image_root, transform)
 test_dataset = LooksDataset(test_csv, image_root, transform)
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,  num_workers=NUM_WORKERS)
+test_loader  = DataLoader(test_dataset,  batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
 
 # =======================
 # 5. Model定義
@@ -78,12 +84,12 @@ model = model.to(device)
 # 6. Loss & 最適化
 # =======================
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
 # =======================
 # 7. 学習Loop
 # =======================
-for epoch in range(num_epochs):
+for epoch in range(NUM_EPOCHS):
     model.train()
     total_loss, correct, total = 0, 0, 0
 
@@ -121,7 +127,8 @@ for epoch in range(num_epochs):
 # =======================
 # 8. Model保存
 # =======================
-torch.save(model.state_dict(), '/home/student/e21/e215706/dm/sorce/model/create/efficientnetb0_looks_classifier.pth')
-print("saved model efficientnetb0_looks_classifier.pth")
-
+model_out = root / paths["models_create_dir"] / "efficientnetb0_looks_classifier.pth"
+ensure_dir(model_out.parent)
+torch.save(model.state_dict(), model_out)
+print(f"saved model: {model_out}")
 sys.stdout.close()
