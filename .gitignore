@@ -1,3 +1,16 @@
 # 大容量モデルファイルを除外
-model/res34_fair_align_multi_7_20190809.pt
-model/res34_fair_align_multi_4_20190809.pt
+models/pretrained/res34_fair_align_multi_7_20190809.pt
+models/pretrained/res34_fair_align_multi_4_20190809.pt
+
+# 必要ないファイルを除外
+__pycache__/
+*.pyc
+*.pyo
+*.swp
+.DS_Store
+.ipynb_checkpoints/
+*.custom*
+data/raw/
+
+# データ削除
+image/all_image/
