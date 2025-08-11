@@ -26,7 +26,7 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
 
 既存のfairfaceラベル
 
--   **file**: `/home/student/e21/e215706/dm/sorce/image/all_image`以後のパス
+-   **file**: `./image/all_image`以後のパス
 -   **age**: 年齢
 -   **gender**: 性別
 -   **race**: 人種
@@ -47,7 +47,7 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
 
 ### データセット構築
 
-データセット構築に使用したコードは `preprocessing` ディレクトリに存在する
+データセット構築に使用したコードは `org/preprocessing/` ディレクトリに存在する
 
 #### 美男美女
 
@@ -69,20 +69,20 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
 
 1.  csvを結合
 2.  csvに新規ラベル`looks`を追加
-3.  `image/csv` にcsvを用意
-4.  `image/all_image/good_train` に美男美女の学習データセットを用意
-5.  `image/all_image/good_test` に美男美女の予測データセットを用意
-6.  `image/all_image/normal_train` に一般人の学習データセットを用意
-7.  `image/all_image/normal_test` に一般人の予測データセットを用意
+3.  `org/image/csv` にcsvを用意
+4.  `org/image/all_image/good_train/` に美男美女の学習データセットを用意
+5.  `image/all_image/good_test/` に美男美女の予測データセットを用意
+6.  `image/all_image/normal_train/` に一般人の学習データセットを用意
+7.  `image/all_image/normal_test/` に一般人の予測データセットを用意
 
 ### 実験
 
-この段階では`image/all_image` ディレクトリにイメージ、`image/csv` にイメージに対するcsvを存在することを想定する（追加学習を行う場合`model` ディレクトリに学習済みモデルが存在することを想定）。
+この段階では`org/image/all_image/` ディレクトリにイメージ、`org/image/csv/` にイメージに対するcsvを存在することを想定する（追加学習を行う場合`org/model/` ディレクトリに学習済みモデルが存在することを想定）。
 各コードのパス(`/home/student/e21/e215706/dm/sorce/`のところ)を正しく修正する。
 
 #### 学習・予測
 
-`code`ディレクトリにあるコードで学習及び予測を行う。
+`org/code/`ディレクトリにあるコードで学習及び予測を行う。
 
 -   **追加学習コード**
     -   `custom_model.py`
@@ -92,7 +92,7 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
     -   `create_model_50.py` (model: resnet50)
     -   `create_model_efficientnet_b0.py` (model: efficientnet_b0)
 
-実行結果は`log`ディレクトリに保存される
+実行結果は`org/log/`ディレクトリに保存される
 
 -   `custom_log.txt`: `custom_model.py`の結果
 -   `resnet18_log.txt`: `create_model_18.py`の結果
@@ -100,17 +100,17 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
 -   `resnet50_log.txt`: `create_model_50.py`の結果
 -   `efficientnetb0_log.txt`: `create_model_efficientnet_b0.py`の結果
 
-学習が終わったモデルは`model`ディレクトリに保存される
+学習が終わったモデルは`org/model/`ディレクトリに保存される
 
--   `custom/custom.pth`: `custom_model.py`で学習したモデル
--   `create/resnet18_looks_classifier.pth`: `create_model_18.py`で学習したモデル
--   `create/resnet34_looks_classifier.pth`: `create_model_34.py`で学習したモデル
--   `create/resnet50_looks_classifier.pth`: `create_model_50.py`で学習したモデル
--   `create/efficientnetb0_looks_classifier.pth`: `create_model_efficientnet_b0.py`で学習したモデル
+-   `custom.pth`: `custom_model.py`で学習したモデル
+-   `resnet18_looks_classifier.pth`: `create_model_18.py`で学習したモデル
+-   `resnet34_looks_classifier.pth`: `create_model_34.py`で学習したモデル
+-   `resnet50_looks_classifier.pth`: `create_model_50.py`で学習したモデル
+-   `efficientnetb0_looks_classifier.pth`: `create_model_efficientnet_b0.py`で学習したモデル
 
 #### gradcam検証
 
-`analysis/gradcam_code` ディレクトリにあるコードでgradcamの検証を行う
+`org/analysis/gradcam_code` ディレクトリにあるコードでgradcamの検証を行う
 
 -   **平均gradcam**
     -   `gradcam_custom_aver.py`: `custom.pth`の平均gradcam出力
@@ -125,7 +125,7 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
     -   `gradcam_resnet50.py`: `resnet50_looks_classifier.pth`の個別gradcam出力
     -   `gradcam_efficientnetb0_aver.py`: `efficientnetb0_looks_classifier.pth`の個別gradcam出力
 
-`analysis/gradcam_results` ディレクトリにあるコードにgradcamの結果が保存される
+`org/analysis/gradcam_results` ディレクトリにあるコードにgradcamの結果が保存される
 
 -   `average`: 平均gradcamが保存されるディレクトリ
 -   個別gradcamは各モデル名と同じディレクトリの保存
@@ -135,11 +135,12 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
 ## ディレクトリ構成
 
 -   `preprocessing`: 前処理コード
--   `image`: 画像とcsv
--   `code`: 学習・予測実行コード
--   `log`: 学習・予測結果
--   `model`: モデル
--   `anaanalysis`: gradcam検証
+-   `org`: 元画像に対するディレクトリ
+    -   `org/image`: 画像とcsv
+    -   `org/code`: 学習・予測実行コード
+    -   `org/log`: 学習・予測結果
+    -   `org/model`: モデル
+    -   `org/anaanalysis`: gradcam検証
 -   `white`: 白背景画像に対するディレクトリ
     -   `white/FaceDetection`: 白背景化コード及び白背景画像
     -   `white/code`: 学習・予測実行コード

@@ -11,6 +11,7 @@ __pycache__/
 .ipynb_checkpoints/
 *.custom*
 data/raw/
+*.log
 
 # データ削除
 image/all_image/
