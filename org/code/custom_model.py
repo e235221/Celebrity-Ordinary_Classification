@@ -29,11 +29,30 @@ train_loader, val_loader = make_loaders(
 
 # 4) model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = build_model("custom", num_classes=2, pretrained=tr.get("use_pretrained_imagenet", False))
+model = build_model("resnet34", num_classes=18, pretrained=tr.get("use_pretrained_imagenet", False))
+
+ckpt_path = root / paths.get("pretrained_ckpt", "")
+if ckpt_path.exists():
+    state = torch.load(ckpt_path, map_location=device)
+    missing, unexpected = model.load_state_dict(state, strict=False)
+    print(f"Loaded checkpoint: {ckpt_path}")
+    if missing:   print(f"  missing keys: {len(missing)} (ok)")
+    if unexpected:print(f"  unexpected keys: {len(unexpected)} (ok)")
+else:
+    print(f"Pretrained checkpoint not found (skip): {ckpt_path}")
+
+import torch.nn as nn
+model.fc = nn.Linear(model.fc.in_features, 2)
 
 # 5) train
-model = train(model, train_loader, val_loader, device,
-              epochs=tr["num_epochs"], lr=tr["learning_rate"])
+model = train(
+    model=model,
+    train_loader=train_loader,
+    val_loader=val_loader,
+    device=device,
+    epochs=tr["num_epochs"],
+    lr=tr["learning_rate"],
+)
 
 # 6) save
 save_model(model, root / paths["models_create_dir"] / "custom.pth")
