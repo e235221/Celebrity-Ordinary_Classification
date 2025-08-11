@@ -1,0 +1,15 @@
+paths:
+  logs_dir: log
+  image_root: image/all_image
+  train_csv: image/csv/all_train.csv
+  test_csv: image/csv/all_test.csv
+  models_create_dir: models
+  models_custom_dir: models
+  pretrained_ckpt: models/pretrained/res34_fair_align_multi_7_20190809.pt
+
+train:
+  batch_size: 32
+  num_epochs: 10
+  learning_rate: 0.0001
+  num_workers: 2
+  use_pretrained_imagenet: false
