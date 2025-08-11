@@ -1,97 +1,99 @@
 import os
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
-from torchvision import models, transforms
+import sys
+from pathlib import Path
 import pandas as pd
 from PIL import Image
-from torchvision.models import ResNet34_Weights
-import sys
+import torch
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms, models
+from config_utils import load_cfg, ensure_dir
 
-# # log path
-log_file = '/home/student/e21/e215706/dm/sorce/white/log/custom_log.txt'
-os.makedirs(os.path.dirname(log_file), exist_ok=True)
-sys.stdout = open(log_file, 'w')
-
-# -----------------------------
-# 1. Dataset定義
-# -----------------------------
+# =======================
+# 1. Dataset 定義
+# =======================
 class LooksDataset(Dataset):
-    def __init__(self, csv_file, image_dir, transform=None):
+    def __init__(self, csv_file, image_root, transform=None):
         self.data = pd.read_csv(csv_file)
-        self.image_dir = image_dir
+        self.image_root = image_root
         self.transform = transform
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        row = self.data.iloc[idx]
-        img_path = os.path.join(self.image_dir, row['file'])
-        label = int(row['looks'])
-
+        img_path = os.path.join(self.image_root, self.data.iloc[idx]['file'])
         image = Image.open(img_path).convert('RGB')
+        label = int(self.data.iloc[idx]['looks'])
         if self.transform:
             image = self.transform(image)
-
         return image, label
 
-# -----------------------------
-# 2. Transform定義
-# -----------------------------
+# =======================
+# 2. Transform 定義
+# =======================
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    transforms.Normalize([0.5]*3, [0.5]*3),
 ])
 
-# -----------------------------
-# 3. Dataset path
-# -----------------------------
-train_csv = '/home/student/e21/e215706/dm/sorce/image/csv/all_train.csv'
-train_dir = '/home/student/e21/e215706/dm/sorce/white/FaceDetection/all_image'
+# =======================
+# 3. Hyperparameter & path
+# =======================
+root, cfg = load_cfg()
+paths, tr = cfg["paths"], cfg["train"]
 
-val_csv = '/home/student/e21/e215706/dm/sorce/image/csv/all_test.csv'
-val_dir = '/home/student/e21/e215706/dm/sorce/white/FaceDetection/all_image'
+log_file = (root / paths["logs_dir"] / "custom_log.txt")
+ensure_dir(log_file.parent)
+sys.stdout = open(log_file, "w", buffering=1, encoding="utf-8")
 
-train_dataset = LooksDataset(train_csv, train_dir, transform=transform)
-val_dataset = LooksDataset(val_csv, val_dir, transform=transform)
+org_root  = root.parent / "org"                       # sorce/org
+train_csv = org_root / "image/csv/all_train.csv"      # sorce/org/image/csv/all_train.csv
+test_csv  = org_root / "image/csv/all_test.csv"       # sorce/org/image/csv/all_test.csv
+image_root = root / paths["image_root"]
 
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=2)
-val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=2)
+BATCH_SIZE  = tr["batch_size"]
+NUM_EPOCHS  = tr["num_epochs"]
+LR          = tr["learning_rate"]
+NUM_WORKERS = tr["num_workers"]
 
-# -----------------------------
-# 4. Model読み込み及び修正
-# -----------------------------
+# =======================
+# 4. DataLoader
+# =======================
+train_dataset = LooksDataset(train_csv, image_root, transform)
+test_dataset  = LooksDataset(test_csv, image_root, transform)
+
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,  num_workers=NUM_WORKERS)
+test_loader  = DataLoader(test_dataset,  batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
+
+# =======================
+# 5. Model 定義
+# =======================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 model = models.resnet34(weights=None)
 model.fc = nn.Linear(model.fc.in_features, 18)  # 重み調整
 model = model.to(device)
 
-checkpoint_path = '/home/student/e21/e215706/dm/sorce/model/res34_fair_align_multi_7_20190809.pt'
+checkpoint_path = org_root / paths["pretrained_ckpt"]
 state_dict = torch.load(checkpoint_path, map_location=device)
 model.load_state_dict(state_dict)
 
 model.fc = nn.Linear(model.fc.in_features, 2)  # looks 0/1
 model = model.to(device)
 
-# -----------------------------
-# 5. Loss & 最適化
-# -----------------------------
+# =======================
+# 6. Loss & 最適化
+# =======================
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
-# -----------------------------
-# 6. 学習Loop
-# -----------------------------
-num_epochs = 10
-
-for epoch in range(num_epochs):
+# =======================
+# 7. 学習 Loop
+# =======================
+for epoch in range(NUM_EPOCHS):
     model.train()
-    running_loss = 0.0
-    correct = 0
-    total = 0
+    total_loss, correct, total = 0.0, 0, 0
 
     for images, labels in train_loader:
         images, labels = images.to(device), labels.to(device)
@@ -102,33 +104,32 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        running_loss += loss.item()
-        _, predicted = outputs.max(1)
+        total_loss += loss.item()
+        preds = outputs.argmax(1)
+        correct += (preds == labels).sum().item()
         total += labels.size(0)
-        correct += predicted.eq(labels).sum().item()
 
-    train_acc = 100. * correct / total
-    print(f"[Epoch {epoch+1}] Loss: {running_loss:.4f} | Train Accuracy: {train_acc:.2f}%")
+    acc = 100.0 * correct / total if total > 0 else 0.0
+    print(f"[Epoch {epoch+1}] Loss: {total_loss:.4f} | Train Accuracy: {acc:.2f}%")
 
     # Validation
     model.eval()
-    correct = 0
-    total = 0
+    correct, total = 0, 0
     with torch.no_grad():
-        for images, labels in val_loader:
+        for images, labels in test_loader:
             images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            _, predicted = outputs.max(1)
+            preds = model(images).argmax(1)
+            correct += (preds == labels).sum().item()
             total += labels.size(0)
-            correct += predicted.eq(labels).sum().item()
-
-    val_acc = 100. * correct / total
+    val_acc = 100.0 * correct / total if total > 0 else 0.0
     print(f"Validation Accuracy: {val_acc:.2f}%\n")
 
-# -----------------------------
-# 7. Model保存
-# -----------------------------
-torch.save(model.state_dict(), '/home/student/e21/e215706/dm/sorce/white/model/custom.pth')
-print("saved model custom.pth")
+# =======================
+# 8. Model 保存
+# =======================
+model_out = root / paths["models_create_dir"] / "custom.pth"
+ensure_dir(model_out.parent)
+torch.save(model.state_dict(), model_out)
+print(f"saved model: {model_out}")
 
 sys.stdout.close()
