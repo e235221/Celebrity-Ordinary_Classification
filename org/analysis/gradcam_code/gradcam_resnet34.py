@@ -77,4 +77,3 @@ for folder in target_folders:
         cv2.imwrite(str(out_path), cv2.cvtColor(cam_img, cv2.COLOR_RGB2BGR))
 
 print("[DONE] Grad-CAM for resnet34 on normal/good test")
-
