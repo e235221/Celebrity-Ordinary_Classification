@@ -19,7 +19,7 @@ models_dir  = root / paths["models_dir"]
 image_base  = root / paths["image_root"]
 output_base = root / paths["gradcam_dir"] / "average"
 ensure_dir(output_base)
-model_path = models_dir / "custom.pth"
+model_path = models_dir / "resnet50_looks_classifier.pth"
 target_folders = ["good_test", "normal_test"]
 
 # ====== 2. 画像前処理 ======
@@ -31,7 +31,7 @@ transform = transforms.Compose([
 
 # ====== 3. モデル読み込み ======
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = models.resnet34(pretrained=False)
+model = models.resnet50(pretrained=False)
 model.fc = nn.Linear(model.fc.in_features, 2)
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.to(device).eval()
@@ -63,7 +63,7 @@ for folder in target_folders:
     heatmaps[folder] = heatmap_sum
 
     avg_heatmap = heatmap_sum / counts[folder]
-    out = output_base / f"gradcam_custom_average_{folder}.png"
+    out = output_base / f"gradcam_resnet50_average_{folder}.png"
     plt.figure(figsize=(6, 6))
     plt.imshow(avg_heatmap, cmap='jet')
     plt.colorbar(); plt.title(f"Average Grad-CAM: {folder}")
@@ -76,7 +76,7 @@ total = sum(heatmaps[f] for f in target_folders)
 total_count = sum(counts[f] for f in target_folders)
 avg_all = total / max(total_count, 1)
 
-out_all = output_base / "gradcam_custom_average_all.png"
+out_all = output_base / "gradcam_resnet50_average_all.png"
 plt.figure(figsize=(6, 6))
 plt.imshow(avg_all, cmap='jet')
 plt.colorbar(); plt.title("Average Grad-CAM: All")

@@ -3,8 +3,9 @@ paths:
   image_root: image/all_image
   train_csv: image/csv/all_train.csv
   test_csv: image/csv/all_test.csv
-  models_create_dir: models
-  models_custom_dir: models
+  models_dir: models
+  analysis_dir: analysis
+  gradcam_dir: analysis/gradcam_results
   pretrained_ckpt: models/pretrained/res34_fair_align_multi_7_20190809.pt
 
 train:
