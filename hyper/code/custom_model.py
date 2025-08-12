@@ -1,3 +1,30 @@
+"""
+概要:
+    ResNet34 ベースの 2 クラス分類モデルを学習・保存するスクリプト。
+    org 側の config.yaml を参照してパス/ハイパーパラメータを取得し、外部チェックポイント
+    （paths.pretrained_ckpt）があれば strict=False でバックボーンに読み込み後、最終fc=2に差し替えて学習する。
+
+主な処理:
+    - 設定(config.yaml)読み込み（org をルートとして扱う）
+    - DataLoader 構築（common.data）
+    - モデル構築（ResNet34 → 18クラス仮ヘッド → 外部CKPTロード → 最終fc=2に差し替え）
+    - 学習/評価/保存（common.train）
+    - 学習時間の計測
+
+入出力/副作用:
+    - 入力: config.yaml（paths.*, train.*）, 外部CKPT（paths.pretrained_ckpt, 任意）
+    - 画像・CSV: sorce/org/image/all_image, sorce/org/image/csv
+    - 出力: sorce/hyper/model/custom_org.pth
+    - ログ: sorce/hyper/log/custom_org_log.txt
+
+依存関係:
+    - config_utils, common.data, common.models, common.train
+    - torchvision (resnet34), torch
+
+実行例:
+    python3 hyper/code/custom_model.py
+"""
+
 from pathlib import Path
 import sys, time
 import torch

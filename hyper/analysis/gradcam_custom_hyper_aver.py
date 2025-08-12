@@ -1,3 +1,30 @@
+"""
+概要:
+    Hyper 設定で学習した ResNet34(2クラス) を用い、white/org データの
+    good_test / normal_test 各フォルダに対して Grad-CAM を計算し、
+    フォルダ単位でヒートマップを平均化して保存するスクリプト。
+
+主な処理:
+    - config.yaml の読み込み（org をルートとしてパス解決）
+    - 学習済みモデル（sorce/hyper/model/custom_hyper.pth）のロード
+    - good_test / normal_test 全画像に対する Grad-CAM 実行
+    - 各フォルダの平均ヒートマップと、全体平均(両フォルダ合算)の保存
+      （出力先: sorce/hyper/analysis/）
+
+入出力/副作用:
+    - 入力: 画像ディレクトリ（sorce/org/image/all_image/**）,
+            学習済みモデル（sorce/hyper/model/custom_hyper.pth）
+    - 出力: 平均 Grad-CAM 画像（sorce/hyper/analysis/ に PNG 保存）
+    - ログ: 標準出力に進捗表示
+
+依存関係:
+    - config_utils（パス解決/ディレクトリ作成）
+    - torchvision, pytorch-grad-cam, numpy, PIL, matplotlib, tqdm, torch
+
+実行例:
+    python3 hyper/analysis/gradcam_custom_hyper_aver.py
+"""
+
 from pathlib import Path
 import sys
 import os

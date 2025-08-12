@@ -1,3 +1,30 @@
+"""
+概要:
+    ResNet34 ベースの 2 クラス分類モデルを、ハイパーパラメータ（EPOCH/BATCH/WORKERS）を
+    スクリプト内で上書きしつつ学習・保存するスクリプト。org 側の config.yaml を参照し、
+    データ/モデル/ログの各パスは設定とディレクトリ構造から自動解決する。
+
+主な処理:
+    - 設定(config.yaml)読み込み（org をルートとして扱う）
+    - DataLoader 構築（common.data）
+    - モデル構築（ResNet34 → 18クラス仮ヘッド → 外部CKPT（任意）ロード → 最終fc=2に差し替え）
+    - 学習/評価/保存（common.train）
+    - 学習時間の計測
+
+入出力/副作用:
+    - 入力: config.yaml（paths.*, train.*）, 外部CKPT（paths.pretrained_ckpt, 任意）
+    - 画像・CSV: sorce/org/image/all_image, sorce/org/image/csv
+    - 出力: sorce/hyper/model/custom_hyper.pth
+    - ログ: sorce/hyper/log/custom_hyper_log.txt
+
+依存関係:
+    - config_utils, common.data, common.models, common.train
+    - torchvision (resnet34), torch
+
+実行例:
+    python3 hyper/code/custom_model_hyper.py
+"""
+
 from pathlib import Path
 import sys, time
 import torch
