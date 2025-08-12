@@ -1,128 +1,68 @@
-import os
-import sys
+"""
+概要:
+    ResNet18 を用いた 2 クラス分類モデルの学習スクリプト。
+    config.yaml のパス/ハイパーパラメータを使用し、共通モジュール(common.*)で学習を実行する。
+
+主な処理:
+    - Dataset/DataLoader 構築（common.data）
+    - モデル構築（ResNet18, common.models）
+    - 学習/評価/保存（common.train）
+
+入出力/副作用:
+    - 入力: config.yaml（paths.train_csv, paths.test_csv, paths.image_root など）
+    - 出力: models_create_dir/resnet18_looks_classifier.pth
+    - ログ: logs_dir/resnet18_log.txt に学習ログを書き出し
+
+依存関係:
+    - config_utils, common.data, common.models, common.train
+    - torchvision (resnet18)
+
+実行例:
+    python3 white/code/create_model_18.py
+"""
+
 from pathlib import Path
-import pandas as pd
-from PIL import Image
+import sys
 import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, models
-from config_utils import load_cfg, ensure_dir
+sys.path.append(str(Path(__file__).parent))
 
-# =======================
-# 1. Dataset 定義
-# =======================
-class LooksDataset(Dataset):
-    def __init__(self, csv_file, image_root, transform=None):
-        self.data = pd.read_csv(csv_file)
-        self.image_root = image_root
-        self.transform = transform
+from config_utils import load_cfg
+from common.data import make_transforms, make_loaders
+from common.models import build_model
+from common.train import setup_logging, train, save_model
 
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        img_path = os.path.join(self.image_root, self.data.iloc[idx]['file'])
-        image = Image.open(img_path).convert('RGB')
-        label = int(self.data.iloc[idx]['looks'])
-        if self.transform:
-            image = self.transform(image)
-        return image, label
-
-# =======================
-# 2. Transform 定義
-# =======================
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.5]*3, [0.5]*3),
-])
-
-# =======================
-# 3. Hyperparameter & path
-# =======================
+# 1) config
 root, cfg = load_cfg()
 paths, tr = cfg["paths"], cfg["train"]
 
-log_file = (root / paths["logs_dir"] / "resnet18_log.txt")
-ensure_dir(log_file.parent)
-sys.stdout = open(log_file, "w", buffering=1, encoding="utf-8")
+# 2) logging
+log_file = root / paths["logs_dir"] / "resnet18_log.txt"
+setup_logging(log_file)
 
-org_root  = root.parent / "org"                       # sorce/org
-train_csv = org_root / "image/csv/all_train.csv"      # sorce/org/image/csv/all_train.csv
-test_csv  = org_root / "image/csv/all_test.csv"       # sorce/org/image/csv/all_test.csv
-image_root = root / paths["image_root"]
+# 3) dataloaders
+org_root   = root.parent / "org"    # sorce/org
+train_csv  = org_root / "image/csv/all_train.csv"
+test_csv   = org_root / "image/csv/all_test.csv"
+image_root = root / paths["image_root"]   # sorce/white/image/all_image
 
-BATCH_SIZE  = tr["batch_size"]
-NUM_EPOCHS  = tr["num_epochs"]
-LR          = tr["learning_rate"]
-NUM_WORKERS = tr["num_workers"]
+transform = make_transforms(img_size=224, mean=[0.5]*3, std=[0.5]*3)
+train_loader, val_loader = make_loaders(
+    train_csv=train_csv,
+    test_csv=test_csv,
+    image_root=image_root,
+    batch_size=tr["batch_size"],
+    num_workers=tr["num_workers"],
+    transform=transform
+)
 
-# =======================
-# 4. DataLoader
-# =======================
-train_dataset = LooksDataset(train_csv, image_root, transform)
-test_dataset  = LooksDataset(test_csv, image_root, transform)
-
-train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,  num_workers=NUM_WORKERS)
-test_loader  = DataLoader(test_dataset,  batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
-
-# =======================
-# 5. Model 定義
-# =======================
+# 4) model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = models.resnet18(weights=None)
-model.fc = nn.Linear(model.fc.in_features, 2)
-model = model.to(device)
+model = build_model("resnet18", num_classes=2, pretrained=tr.get("use_pretrained_imagenet", False))
 
-# =======================
-# 6. Loss & 最適化
-# =======================
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+# 5) train
+model = train(model, train_loader, val_loader, device,
+              epochs=tr["num_epochs"], lr=tr["learning_rate"])
 
-# =======================
-# 7. 学習 Loop
-# =======================
-for epoch in range(NUM_EPOCHS):
-    model.train()
-    total_loss, correct, total = 0.0, 0, 0
-
-    for images, labels in train_loader:
-        images, labels = images.to(device), labels.to(device)
-
-        optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-
-        total_loss += loss.item()
-        preds = outputs.argmax(1)
-        correct += (preds == labels).sum().item()
-        total += labels.size(0)
-
-    acc = 100.0 * correct / total if total > 0 else 0.0
-    print(f"[Epoch {epoch+1}] Loss: {total_loss:.4f} | Train Accuracy: {acc:.2f}%")
-
-    # Validation
-    model.eval()
-    correct, total = 0, 0
-    with torch.no_grad():
-        for images, labels in test_loader:
-            images, labels = images.to(device), labels.to(device)
-            preds = model(images).argmax(1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
-    val_acc = 100.0 * correct / total if total > 0 else 0.0
-    print(f"Validation Accuracy: {val_acc:.2f}%\n")
-
-# =======================
-# 8. Model 保存
-# =======================
-model_out = root / paths["models_create_dir"] / "resnet18_looks_classifier.pth"
-ensure_dir(model_out.parent)
-torch.save(model.state_dict(), model_out)
-print(f"saved model: {model_out}")
-
-sys.stdout.close()
+# 6) save
+save_path = root / paths["models_create_dir"] / "resnet18_looks_classifier.pth"
+save_model(model, save_path)

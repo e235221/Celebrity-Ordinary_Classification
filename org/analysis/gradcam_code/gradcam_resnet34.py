@@ -1,79 +1,32 @@
-import os
+"""
+gradcam_resnet34.py
+
+ResNet34 モデルを用いてテスト用フォルダに含まれる画像ごとに Grad-CAM を適用し、
+各画像ごとの可視化結果を保存するスクリプト。
+
+機能概要:
+- config.yaml からパス設定を読み込み
+- 学習済み ResNet34 モデルをロード
+- 指定された複数フォルダ（例: normal_test, good_test）の全画像に対し Grad-CAM を実行
+- 画像ごとの Grad-CAM 可視化結果を保存
+
+想定用途:
+- 個別画像単位での特徴可視化と、モデルが注目している領域の確認
+"""
+
 from pathlib import Path
 import sys
-import cv2
-import numpy as np
-from PIL import Image
-from tqdm import tqdm
-import torch
-import torch.nn as nn
-from torchvision import models, transforms
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
-
-# ====== 1. 共通設定 ======
 sys.path.append(str(Path(__file__).resolve().parents[2] / "code"))
-from config_utils import load_cfg, ensure_dir
+from config_utils import load_cfg
+from common.gradcam import run_gradcam_on_folders
+
 root, cfg = load_cfg()
 paths = cfg["paths"]
-models_dir   = root / paths["models_dir"]
-image_root   = root / paths["image_root"]
-gradcam_root = root / paths["gradcam_dir"] / "resnet34"
-model_path = models_dir / "resnet34_looks_classifier.pth"
-target_folders = ["normal_test", "good_test"]
 
-# ====== 2. 画像前処理 ======
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.5]*3, [0.5]*3),
-])
-to_rgb = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-])
+arch = "resnet34"
+model_path = root / paths["models_dir"] / "resnet34_looks_classifier.pth"
+image_root = root / paths["image_root"]
+out_root   = root / paths["gradcam_dir"] / arch
+folders    = ["normal_test", "good_test"]
 
-# ====== 3. モデル読み込み ======
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = models.resnet34(weights=None)
-model.fc = nn.Linear(model.fc.in_features, 2)
-state = torch.load(model_path, map_location=device)
-model.load_state_dict(state)
-model.to(device).eval()
-
-# ========== 4) Grad-CAM ==========
-target_layer = model.layer4[-1]
-cam = GradCAM(model=model, target_layers=[target_layer])
-
-# ====== 5. 処理 ======
-exts = (".jpg", ".jpeg", ".png")
-for folder in target_folders:
-    src_dir = image_root / folder
-    out_dir = gradcam_root / folder
-    ensure_dir(out_dir)
-
-    if not src_dir.exists():
-        print(f"[WARN] skip (not found): {src_dir}")
-        continue
-
-    image_files = [f for f in os.listdir(src_dir) if f.lower().endswith(exts)]
-    print(f"[INFO] {folder}: {len(image_files)} files")
-
-    for fname in tqdm(image_files, desc=f"Grad-CAM {folder}"):
-        img_path = src_dir / fname
-        pil_img = Image.open(img_path).convert("RGB")
-
-        input_tensor = transform(pil_img).unsqueeze(0).to(device)
-
-        rgb = to_rgb(pil_img).permute(1, 2, 0).numpy()
-        vmin, vmax = rgb.min(), rgb.max()
-        if vmax > vmin:
-            rgb = (rgb - vmin) / (vmax - vmin)
-
-        grayscale_cam = cam(input_tensor=input_tensor, targets=None)[0]
-        cam_img = show_cam_on_image(rgb, grayscale_cam, use_rgb=True)
-
-        out_path = out_dir / f"cam_{fname}"
-        cv2.imwrite(str(out_path), cv2.cvtColor(cam_img, cv2.COLOR_RGB2BGR))
-
-print("[DONE] Grad-CAM for resnet34 on normal/good test")
+run_gradcam_on_folders(arch, model_path, image_root, out_root, folders, num_classes=2, img_size=224)

@@ -138,6 +138,7 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
 -   `org`: 元画像に対するディレクトリ
     -   `org/image`: 画像とcsv
     -   `org/code`: 学習・予測実行コード
+    -   `org/code/common`: モジュールコード
     -   `org/log`: 学習・予測結果
     -   `org/model`: モデル
     -   `org/anaanalysis`: gradcam検証
@@ -145,16 +146,10 @@ Grad-Cam の結果より目元と口元を見て一般人と美男美女を分�
     -   `white/image`: 白背景画像
     -   `white/FaceDetection`: 白背景化コード及び白背景画像
     -   `white/code`: 学習・予測実行コード
+    -   `white/code/common`: モジュールコード
     -   `white/log`: 学習・予測結果
     -   `white/model`: モデル
     -   `white/analysis`: gradcam検証
--   `remove_back`: 透明背景画像に対するディレクトリ
-    -   `remove_back/image`: 透明背景画像
-    -   `remove_back/csv`: 画像のcsv
-    -   `remove_back/code`: 学習・予測実行コード
-    -   `remove_back/log`: 学習・予測結果
-    -   `remove_back/model`: モデル
-    -   `remove_back/analysis`: gradcam検証
 -   `hyper`: ハイパーパラメータ調整後に対するディレクト
     -   `hyper/code`: 学習・予測実行コード
     -   `hyper/log`: 学習・予測結果
