@@ -1,3 +1,28 @@
+"""
+概要:
+    ResNet34 ベースのカスタム学習スクリプト。
+    外部チェックポイント（paths.pretrained_ckpt）が存在すれば strict=False でロード後、
+    最終層を 2 クラス用に付け替えて学習する。
+
+主な処理:
+    - DataLoader 構築（common.data）
+    - モデル構築（ResNet34 → 18クラス仮ヘッド → 外部CKPTロード → 最終fc=2に差し替え）
+    - 学習/評価/保存（common.train）
+
+入出力/副作用:
+    - 入力: config.yaml（paths.*, train.*）, 外部CKPT（任意）
+    - 出力: models_create_dir/custom.pth
+    - ログ: logs_dir/custom_log.txt
+
+依存関係:
+    - config_utils, common.*
+    - torchvision (resnet34)
+    - torch.load(ckpt, strict=False) による部分ロード
+
+実行例:
+    python3 white/code/custom_model.py
+"""
+
 from pathlib import Path
 import sys
 import torch

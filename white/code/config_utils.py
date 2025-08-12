@@ -1,3 +1,26 @@
+"""
+概要:
+    プロジェクト共通の設定ローダー/ユーティリティ。
+    white ディレクトリをルート(root)として扱い、リポジトリ直下の config.yaml を読み込む。
+
+主な機能:
+    - load_cfg(): white ルートと設定(dict)を返す
+    - ensure_dir(path): ディレクトリが無ければ作成
+
+入出力/副作用:
+    - 入力: リポジトリ直下の config.yaml
+    - 出力: なし（呼び出し側へ設定を返す）
+    - 副作用: なし（ensure_dir はディレクトリ作成あり）
+
+依存関係:
+    - pathlib, yaml
+
+使い方(例):
+    from config_utils import load_cfg, ensure_dir
+    root, cfg = load_cfg()
+    ensure_dir(root / "log")
+"""
+
 from pathlib import Path
 import yaml
 

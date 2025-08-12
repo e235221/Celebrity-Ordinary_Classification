@@ -1,3 +1,26 @@
+"""
+概要:
+    ResNet34 を用いた 2 クラス分類モデルの学習スクリプト。
+    config.yaml の設定に基づき、共通モジュールを利用して学習を実行する。
+
+主な処理:
+    - Dataset/DataLoader 構築（common.data）
+    - モデル構築（ResNet34, common.models）
+    - 学習/評価/保存（common.train）
+
+入出力/副作用:
+    - 入力: config.yaml
+    - 出力: models_create_dir/resnet34_looks_classifier.pth
+    - ログ: logs_dir/resnet34_log.txt
+
+依存関係:
+    - config_utils, common.data, common.models, common.train
+    - torchvision (resnet34)
+
+実行例:
+    python3 white/code/create_model_34.py
+"""
+
 from pathlib import Path
 import sys
 import torch

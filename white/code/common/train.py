@@ -1,3 +1,19 @@
+"""
+train.py
+--------
+モデルの学習・評価・保存に関する共通関数をまとめたモジュール。
+
+提供関数:
+    setup_logging(log_path: Path)
+        ログ出力を指定ファイルにリダイレクトする。
+    evaluate(model, loader, device)
+        モデルを評価モードで推論し、正解率(%)を返す。
+    train(model, train_loader, val_loader, device, epochs, lr, optimizer_cls)
+        指定したエポック数だけモデルを学習させる。
+    save_model(model, out_path: Path)
+        モデルの state_dict を指定パスに保存する。
+"""
+
 from pathlib import Path
 import torch
 import torch.nn as nn

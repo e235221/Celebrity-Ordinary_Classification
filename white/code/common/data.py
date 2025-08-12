@@ -1,3 +1,16 @@
+"""
+data.py
+
+このモジュールはデータローディング関連の機能をまとめています。
+主な機能:
+- LooksDataset: CSVファイルと画像ディレクトリからデータセットを構築する PyTorch Dataset クラス
+- make_transforms: 画像サイズ変更・テンソル化・正規化を行う torchvision.transforms の定義
+- make_loaders: 訓練用・評価用 DataLoader の生成
+
+想定される用途:
+モデル学習スクリプトから import して、共通のデータ前処理・ローダー生成処理を利用するために使います。
+"""
+
 from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Tuple
