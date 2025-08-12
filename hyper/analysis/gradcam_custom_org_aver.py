@@ -1,91 +1,71 @@
-import numpy as np
-import cv2
-import os
-from tqdm import tqdm
-from PIL import Image
+from pathlib import Path
+import sys, time
 import torch
-from torchvision import transforms
-from pytorch_grad_cam import GradCAM
-from torchvision import models
 import torch.nn as nn
-import matplotlib.pyplot as plt
 
-# ====== 1. 共通設定 ======
+ORG_CODE = Path(__file__).resolve().parents[1] / "org" / "code"
+sys.path.append(str(ORG_CODE))
+
+from config_utils import load_cfg, ensure_dir
+from common.data import make_transforms, make_loaders
+from common.models import build_model
+from common.train import setup_logging, train, save_model
+
+# 1) Path
+org_root, cfg = load_cfg()                 # org (/.../sorce/org), config load
+project_root  = org_root.parent            # /.../sorce
+hyper_root    = project_root / "hyper"     # /.../sorce/hyper
+
+paths, tr = cfg["paths"], cfg["train"]
+
+log_file = hyper_root / "log" / "custom_org_log.txt"
+ensure_dir(log_file.parent)
+setup_logging(log_file)
+
+train_csv  = org_root / paths["train_csv"]
+test_csv   = org_root / paths["test_csv"]
+image_root = org_root / paths["image_root"]
+
+model_out = hyper_root / "model" / "custom_org.pth"
+ensure_dir(model_out.parent)
+
+ckpt_path = org_root / paths.get("pretrained_ckpt", "")
+
+# ===== 2) DataLoader
+transform = make_transforms(img_size=224, mean=[0.5]*3, std=[0.5]*3)
+train_loader, val_loader = make_loaders(
+    train_csv=train_csv,
+    test_csv=test_csv,
+    image_root=image_root,
+    batch_size=tr["batch_size"],
+    num_workers=tr["num_workers"],
+    transform=transform,
+)
+
+# 3) Model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = build_model("resnet34", num_classes=18, pretrained=tr.get("use_pretrained_imagenet", False)).to(device)
 
-image_base = "/home/student/e21/e215706/dm/sorce/image/all_image"
-output_base = "/home/student/e21/e215706/dm/sorce/hyper/analysis"
-model_path = "/home/student/e21/e215706/dm/sorce/hyper/model/custom_org.pth"
-target_folders = ["good_test", "normal_test"]
+if ckpt_path.exists():
+    state = torch.load(ckpt_path, map_location=device)
+    model.load_state_dict(state, strict=False)
+    print(f"Loaded checkpoint: {ckpt_path}")
+else:
+    print(f"Pretrained checkpoint not found (skip): {ckpt_path}")
 
-# ====== 2. 画像前処理 ======
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.5] * 3, [0.5] * 3)
-])
+model.fc = nn.Linear(model.fc.in_features, 2).to(device)
 
-# ====== 3. モデル読み込み ======
-model = models.resnet34(pretrained=False)
-model.fc = nn.Linear(model.fc.in_features, 2)
-model.load_state_dict(torch.load(model_path, map_location=device))
-model.to(device).eval()
-
-# ====== 4. Grad-CAM定義 ======
-target_layer = model.layer4[-1]
-cam = GradCAM(model=model, target_layers=[target_layer])
-
-# ====== 5. 平均計算用の辞書 ======
-heatmaps = {}
-counts = {}
-
-# ====== 6. 各フォルダ処理 ======
-for folder in target_folders:
-    folder_path = os.path.join(image_base, folder)
-    image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
-
-    heatmap_sum = np.zeros((224, 224))
-    count = 0
-
-    print(f"処理中: {folder}（画像数: {len(image_files)}）")
-
-    for img_file in tqdm(image_files, desc=f"Grad-CAM {folder}"):
-        img_path = os.path.join(folder_path, img_file)
-        image = Image.open(img_path).convert('RGB')
-        input_tensor = transform(image).unsqueeze(0).to(device)
-        grayscale_cam = cam(input_tensor=input_tensor, targets=None)[0]
-        heatmap_sum += grayscale_cam
-        count += 1
-
-    heatmaps[folder] = heatmap_sum
-    counts[folder] = count
-
-    # 保存: 個別フォルダの平均
-    avg_heatmap = heatmap_sum / count
-    output_path = os.path.join(output_base, f"gradcam_custom_org_average_{folder}.png")
-    plt.figure(figsize=(6, 6))
-    plt.imshow(avg_heatmap, cmap='jet')
-    plt.colorbar()
-    plt.title(f"Average Grad-CAM(Original): {folder}")
-    plt.axis('off')
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=300)
-    plt.close()
-    print(f"保存完了: {output_path}")
-
-# ====== 7. good + normal 合計ヒートマップ ======
-total_heatmap = heatmaps["good_test"] + heatmaps["normal_test"]
-total_count = counts["good_test"] + counts["normal_test"]
-avg_all = total_heatmap / total_count
-
-output_all_path = os.path.join(output_base, "gradcam_custom_org_average_all.png")
-plt.figure(figsize=(6, 6))
-plt.imshow(avg_all, cmap='jet')
-plt.colorbar()
-plt.title("Average Grad-CAM(Original): All (good + normal)")
-plt.axis('off')
-plt.tight_layout()
-plt.savefig(output_all_path, dpi=300)
-plt.close()
-print(f"保存完了: {output_all_path}")
-
+# 4) Train
+start = time.time()
+model = train(
+    model=model,
+    train_loader=train_loader,
+    val_loader=val_loader,
+    device=device,
+    epochs=tr["num_epochs"],
+    lr=tr["learning_rate"],
+)
+# 5) Save & Time
+save_model(model, model_out)
+elapsed_min = (time.time() - start) / 60
+print(f"Total Training Time: {elapsed_min:.2f} minutes")
