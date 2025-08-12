@@ -1,3 +1,19 @@
+"""
+gradcam_custom_aver.py
+
+Resnet34 (custom) モデルを用いてテスト用フォルダに含まれる画像に Grad-CAM を適用し、
+クラスごとの Grad-CAM マップを平均化して保存するスクリプト。
+
+機能概要:
+- config.yaml からパス設定を読み込み
+- 学習済み Resnet34 (custom) モデルをロード
+- 指定されたフォルダ（例: good_test, normal_test）の全画像に対し Grad-CAM を実行
+- クラスごとの Grad-CAM を平均化し、結果画像を out_dir に保存
+
+想定用途:
+- テストデータセット全体の特徴可視化傾向を確認するための分析
+"""
+
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[2] / "code"))
