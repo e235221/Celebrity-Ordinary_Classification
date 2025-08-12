@@ -1,3 +1,20 @@
+"""
+gradcam.py
+
+このモジュールは、PyTorch と pytorch-grad-cam を利用して Grad-CAM を計算・保存するためのユーティリティ関数群を提供します。
+主な機能は以下の通りです：
+    - 学習済みモデルの構築（Grad-CAM 対応層の特定）
+    - 単一画像またはフォルダ内の全画像に対する Grad-CAM 実行
+    - フォルダ単位での Grad-CAM ヒートマップ平均化と保存
+    - 入力画像の前処理（正規化、リサイズなど）
+
+対象モデル：
+    ResNet18 / ResNet34 / ResNet50 / EfficientNet-B0
+
+依存ライブラリ：
+    pytorch-grad-cam, torchvision, matplotlib, numpy, PIL
+"""
+
 from __future__ import annotations
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict

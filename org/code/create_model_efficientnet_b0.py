@@ -1,3 +1,25 @@
+"""
+概要:
+    EfficientNet-B0 を用いた 2 クラス分類モデルの学習スクリプト。
+    config.yaml を参照し、共通モジュールで前処理→学習→保存を行う。
+
+主な処理:
+    - DataLoader 構築（common.data）
+    - モデル構築（EfficientNet-B0, common.models）
+    - 学習/評価/保存（common.train）
+
+入出力/副作用:
+    - 出力: models_create_dir/efficientnetb0_looks_classifier.pth
+    - ログ: logs_dir/efficientnetb0_log.txt
+
+依存関係:
+    - config_utils, common.*
+    - torchvision (efficientnet_b0)
+
+実行例:
+    python3 org/code/create_model_efficientnet_b0.py
+"""
+
 from pathlib import Path
 import torch
 import sys

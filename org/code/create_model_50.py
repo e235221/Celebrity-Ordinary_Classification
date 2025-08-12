@@ -1,3 +1,25 @@
+"""
+概要:
+    ResNet50 を用いた 2 クラス分類モデルの学習スクリプト。
+    config.yaml の設定を使用し、共通モジュールで学習ループを実行する。
+
+主な処理:
+    - DataLoader 構築（common.data）
+    - モデル構築（ResNet50, common.models）
+    - 学習/評価/保存（common.train）
+
+入出力/副作用:
+    - 出力: models_create_dir/resnet50_looks_classifier.pth
+    - ログ: logs_dir/resnet50_log.txt
+
+依存関係:
+    - config_utils, common.*
+    - torchvision (resnet50)
+
+実行例:
+    python3 org/code/create_model_50.py
+"""
+
 from pathlib import Path
 import torch
 import sys
